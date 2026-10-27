@@ -1,12 +1,14 @@
 """Repinta la librea del A319 (Pincel de Alas, CC BY 4.0) con la identidad BILAIR.
 
-Uso: python3 scripts/repaint_livery.py <entrada.glb> <salida.glb> <fuente_marker> <fuente_sans>
+Uso: python3 scripts/repaint_livery.py <entrada.glb> <salida.glb> <fuente_logo> <fuente_sans>
+<fuente_logo> puede ser una fuente variable (ej. Archivo): se usa en peso 900 y ancho 125.
 Reemplaza las texturas de fuselaje (logo y matrícula) y recolorea la cola.
+Librea sobria: fuselaje blanco, logo en carbón, cola en carbón y piedra.
 """
 import io, json, struct, sys
 from PIL import Image, ImageDraw, ImageFont
 
-SRC, DST, MARKER, SANS = sys.argv[1:5]
+SRC, DST, LOGO_FONT, SANS = sys.argv[1:5]
 CHARCOAL = (24, 23, 21)
 ORANGE = (255, 79, 26)
 STONE = (138, 133, 124)
@@ -39,11 +41,20 @@ def erase(im, box):
             px[x, y] = tuple(int(top[c] * (1 - t) + bot[c] * t) for c in range(3))
 
 
-def fit_text(draw, text, font_path, box, anchor_x='l'):
+def load_font(path, size):
+    f = ImageFont.truetype(path, size)
+    try:
+        f.set_variation_by_axes([900, 125])  # Archivo Black Expanded
+    except Exception:
+        pass
+    return f
+
+
+def fit_text(draw, text, font_path, box, anchor_x='l', spacing=0):
     x0, y0, x1, y1 = box
     size = 200
     while size > 8:
-        f = ImageFont.truetype(font_path, size)
+        f = load_font(font_path, size)
         l, t, r, b = draw.textbbox((0, 0), text, font=f)
         if r - l <= x1 - x0 and b - t <= y1 - y0:
             break
@@ -56,11 +67,8 @@ def fit_text(draw, text, font_path, box, anchor_x='l'):
 
 def wordmark(im, box):
     d = ImageDraw.Draw(im)
-    f, x, y, w = fit_text(d, 'BILAIR', MARKER, box)
+    f, x, y, w = fit_text(d, 'BILAIR', LOGO_FONT, box)
     d.text((x, y), 'BILAIR', font=f, fill=CHARCOAL)
-    # trazo naranja bajo el logo: el único acento de color del fuselaje
-    x0, _, _, y1 = box
-    d.line([(x0 + 4, y1 + 2), (x0 + w * 0.42, y1 - 1)], fill=ORANGE, width=4)
 
 
 def registration(im, box, flag_side):
@@ -83,7 +91,7 @@ def registration(im, box, flag_side):
 
 
 def recolor_tail(im):
-    """Estabilizadores en carbón y piedra; en la deriva, una sola franja naranja de acento."""
+    """Deriva en carbón; estabilizadores en carbón y piedra. Sin colores de la librea original."""
     px = im.load()
     for y in range(im.height):
         for x in range(im.width):
@@ -96,9 +104,9 @@ def recolor_tail(im):
             if r > 180 and g < 110:
                 base = CHARCOAL; shade = 1
             elif r > 180 and g >= 110 and b < 90:
-                base = STONE; shade = min(1, shade * 1.05)
+                base = CHARCOAL if fin else STONE; shade = 1 if fin else min(1, shade * 1.05)
             elif b > r and g > r:
-                base = ORANGE if fin else DARK_STONE; shade = min(1, shade * 1.6) if not fin else 1
+                base = CHARCOAL if fin else DARK_STONE; shade = 1 if fin else min(1, shade * 1.6)
             else:
                 continue
             px[x, y] = tuple(int(c * shade) for c in base)
@@ -108,8 +116,8 @@ edits = {}
 fus = read_image(2)
 erase(fus, (570, 34, 1012, 108))
 erase(fus, (18, 708, 486, 794))
-wordmark(fus, (600, 48, 930, 104))
-wordmark(fus, (40, 722, 370, 778))
+wordmark(fus, (610, 56, 900, 100))
+wordmark(fus, (50, 730, 340, 774))
 edits[2] = fus
 
 reg = read_image(3)

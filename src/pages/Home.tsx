@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Hero } from '../components/Hero';
+import { HomeHero } from '../components/HomeHero';
 import { WorldMap } from '../components/WorldMap';
 import { NextStop, type NextStopHandle } from '../components/NextStop';
 import { Drops } from '../components/Drops';
@@ -41,7 +41,7 @@ export function Home() {
 
   return (
     <>
-      <Hero />
+      <HomeHero />
 
       <section id="destinos" className="section section--paper grain" aria-labelledby="destinos-title">
         <div className="wrap">

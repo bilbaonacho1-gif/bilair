@@ -7,7 +7,7 @@ La compra **no se hace acá**: el carrito manda a la tienda oficial ([bilair.com
 ## Stack
 
 - Vite + React 18 + TypeScript
-- three.js para el avión 3D del hero (se carga aparte, solo en el hero)
+- three.js para la intro con el avión 3D (se carga aparte, solo cuando se reproduce la intro)
 - framer-motion para las transiciones del ropero y los modales
 - d3-geo + world-atlas para el mapa
 - Vercel Functions (`/api`) para la votación persistente (opcional)
@@ -22,7 +22,8 @@ npm run build    # build de producción en dist/
 
 | Sección | Componente | Estado |
 | --- | --- | --- |
-| Hero con avión 3D | `src/components/Hero.tsx`, `src/three/PlaneScene.ts` | Funcional. Si no hay WebGL o falla la carga, muestra una versión liviana |
+| Intro cinematográfica | `src/components/Intro.tsx`, `src/three/IntroScene.ts`, `src/three/timeline.ts` | Funcional (ver abajo) |
+| Primera escena de la home | `src/components/HomeHero.tsx`, `src/styles/intro.css` | Funcional. La foto es un render del avión hasta tener campaña real |
 | Mapa de destinos | `src/components/WorldMap.tsx` | Funcional (zoom, arrastre, selección, teclado por la lista) |
 | Votación Next Stop | `src/components/NextStop.tsx`, `src/services/votes.ts`, `api/votes.ts` | **Demo** hasta conectar Upstash (ver abajo) |
 | Drops | `src/components/Drops.tsx`, `src/pages/DropPage.tsx` | Funcional, con datos provisionales |
@@ -32,6 +33,30 @@ npm run build    # build de producción en dist/
 | Lookbook | `src/components/Lookbook.tsx` | Estructura lista, fotos pendientes |
 | Carrito / checkout | `src/services/cart.tsx`, `src/pages/CartPage.tsx` | Funcional; deriva la compra a la tienda oficial |
 
+## Intro
+
+Aproximación final sobre el Río de la Plata al atardecer (unos 5 segundos):
+
+1. **Aproximación**: el avión aparece a 1,5 km con las luces de aterrizaje encendidas y se acerca a velocidad de zoom constante.
+2. **Paso por la cámara**: desacelera hasta pasar a 13 m sobre la cámara, con desenfoque radial, vibración y la cámara siguiéndolo con retraso.
+3. **Revelado**: el paso del avión abre un hueco en la escena desde su centro y por ahí aparece la home, mientras el avión sigue en pantalla. Las franjas de cine se abren y entran el logo y los textos.
+
+Reglas:
+
+- Se ve **una vez por sesión** y solo al entrar por `/`. Las rutas internas abren directo.
+- **Saltar intro** (o Escape) corta la secuencia en cualquier momento.
+- Con `prefers-reduced-motion`, sin WebGL o si el modelo tarda más de 7 s, la home aparece directo.
+- En celulares y equipos de pocos núcleos: sin antialiasing, menor resolución y menos muestras de desenfoque.
+- Al terminar se libera todo el motor 3D: el resto del sitio no paga el costo.
+
+Para revisar la secuencia cuadro por cuadro:
+
+- `/?intro`: fuerza la intro aunque ya se haya visto.
+- `/?intro-frame=4.2`: muestra el cuadro exacto del segundo 4,2.
+- `/?intro-still=3.75`: cuadro limpio, sin desenfoque ni interfaz. Así se generó `public/media/hero/final-approach.jpg`.
+
+Los tiempos de la secuencia están en `src/three/timeline.ts`.
+
 ## Qué es provisional (y dónde se cambia)
 
 Todo lo provisional está marcado en la interfaz ("Muestra", "Ejemplo", "Foto pendiente", "Modo demostración") y en el código.
@@ -39,7 +64,8 @@ Todo lo provisional está marcado en la interfaz ("Muestra", "Ejemplo", "Foto pe
 - **Productos**: `src/data/products.ts`. Son de muestra (`demo: true`, sin precio ni stock). Reemplazar con el catálogo real y poner `catalogIsDemo: false` en `src/config/site.ts`.
 - **Destinos y drops**: `src/data/destinations.ts` y `src/data/drops.ts`.
 - **Contacto**: `src/config/site.ts` (WhatsApp, Instagram, mail). Lo que queda vacío no se muestra.
-- **Logo**: `src/components/Logo.tsx` es un wordmark provisional. Reemplazar por el SVG oficial.
+- **Logo**: `src/components/Logo.tsx` es un wordmark provisional en Archivo, igual al del fuselaje. Reemplazar por el SVG oficial.
+- **Foto de la home**: `public/media/hero/final-approach.jpg` es un render del avión. Reemplazar por una foto de campaña vertical (4:5) cuando exista.
 - **Fotos**: cualquier `Media` sin `src` se dibuja como placeholder con curvas de nivel y el código de la ciudad.
 
 ## Cargar fotos reales
@@ -86,16 +112,15 @@ Duplicados: un voto por visitante (hash de IP + navegador + sal). Para una votac
 
 `public/models/bilair-a319.glb` deriva de [“Airbus A319 — Pincel de Alas”](https://sketchfab.com/3d-models/airbus-a319-pincel-de-alas-1a63d67a03be499393f2171f646ccecf) (licencia CC BY 4.0). La atribución figura en el footer.
 
-La librea se repintó con `scripts/repaint_livery.py`: logo BILAIR en el fuselaje, matrícula LV-BLR y cola en carbón, piedra y naranja. Después se comprimió con gltf-transform (meshopt + WebP, de 7,9 MB a 0,95 MB):
+La librea se repintó con `scripts/repaint_livery.py`: BILAIR en Archivo negro sobre el fuselaje blanco, matrícula LV-BLR y cola en carbón. Después se comprimió con gltf-transform (meshopt + WebP, de 7,9 MB a 0,95 MB):
 
 ```bash
-python3 scripts/repaint_livery.py original.glb repintado.glb <fuente-marker> <fuente-sans>
+python3 scripts/repaint_livery.py original.glb repintado.glb node_modules/@fontsource-variable/archivo/files/archivo-latin-wdth-normal.woff2 <fuente-sans>
 npx @gltf-transform/cli optimize repintado.glb public/models/bilair-a319.glb --compress meshopt --texture-compress webp --texture-size 1024
 ```
 
 ## Accesibilidad y rendimiento
 
-- Respeta `prefers-reduced-motion`: sin animación del avión, sin parallax ni marquesina.
-- El canvas 3D solo renderiza cuando el hero está en pantalla y la pestaña visible.
-- En celulares y equipos de pocos núcleos la escena usa menos nubes y menor resolución.
+- Respeta `prefers-reduced-motion`: sin intro, sin parallax ni marquesina.
+- El motor 3D solo se descarga si se reproduce la intro, y se libera al terminar.
 - Navegación por teclado en mapa (lista de destinos), ropero (flechas y Escape) y modales.

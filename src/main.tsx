@@ -8,6 +8,7 @@ import '@fontsource/ibm-plex-mono/500.css';
 import '@fontsource/permanent-marker/400.css';
 import './styles/base.css';
 import './styles/sections.css';
+import './styles/intro.css';
 import { CartProvider } from './services/cart';
 import { Nav } from './components/Nav';
 import { Footer } from './components/Footer';
@@ -18,6 +19,7 @@ import { ProductPage } from './pages/ProductPage';
 import { CartPage } from './pages/CartPage';
 import { NotFound } from './pages/NotFound';
 import { site } from './config/site';
+import { IntroProvider } from './components/Intro';
 
 function ScrollToTop() {
   const { pathname, hash } = useLocation();
@@ -45,20 +47,22 @@ function App() {
     <MotionConfig reducedMotion="user">
       <CartProvider>
         <BrowserRouter>
-          <ScrollToTop />
-          <Nav />
-          <main id="main">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/drops/:id" element={<DropPage />} />
-              <Route path="/producto/:id" element={<ProductPage />} />
-              <Route path="/carrito" element={<CartPage />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </main>
-          <DemoNotice />
-          <Footer />
-          <CartDrawer />
+          <IntroProvider>
+            <ScrollToTop />
+            <Nav />
+            <main id="main">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/drops/:id" element={<DropPage />} />
+                <Route path="/producto/:id" element={<ProductPage />} />
+                <Route path="/carrito" element={<CartPage />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </main>
+            <DemoNotice />
+            <Footer />
+            <CartDrawer />
+          </IntroProvider>
         </BrowserRouter>
       </CartProvider>
     </MotionConfig>

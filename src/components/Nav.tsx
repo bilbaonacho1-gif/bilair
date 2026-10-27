@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Logo } from './Logo';
 import { useCart } from '../services/cart';
 import { site } from '../config/site';
+import { useIntroPhase } from './Intro';
 
 const links = [
   { id: 'destinos', label: 'Destinos' },
@@ -41,7 +42,7 @@ export function Nav() {
   useEffect(() => {
     // Sobre el hero la barra es transparente; se vuelve sólida al salir de él
     const on = () => {
-      const hero = document.querySelector('.hero');
+      const hero = document.querySelector('.home-hero');
       setScrolled(hero ? hero.getBoundingClientRect().bottom < 120 : window.scrollY > 24);
     };
     on();
@@ -70,17 +71,18 @@ export function Nav() {
   };
 
   const onHero = pathname === '/' && !scrolled;
+  const phase = useIntroPhase();
 
   return (
     <>
       <a className="skip mono" href="#main">
         Saltar al contenido
       </a>
-      <header className={`nav ${onHero ? 'nav--over' : ''} ${open ? 'nav--open' : ''}`}>
+      <header className={`nav ${onHero ? 'nav--over' : ''} ${open ? 'nav--open' : ''} ${phase === 'intro' ? 'nav--hidden' : ''}`}>
         <Marquee />
         <div className="nav__bar wrap">
           <Link to="/" className="nav__logo" aria-label="BILAIR, volver al inicio">
-            <Logo size={30} />
+            <Logo size={22} />
           </Link>
           <nav className="nav__links" aria-label="Principal">
             {links.map((l) => (
