@@ -4,6 +4,7 @@ import { getProduct } from '../data/products';
 import { ProductDetail } from '../components/ProductDetail';
 import { GarmentVisual } from '../components/Wardrobe';
 import { garmentBox } from '../components/Garment';
+import { GarmentStudio, supports3D } from '../components/GarmentStudio';
 import { NotFound } from './NotFound';
 
 export function ProductPage() {
@@ -25,13 +26,16 @@ export function ProductPage() {
           colorId={colorId}
           onColor={setColorId}
           headingLevel="h1"
-          visual={
-            <div className="pdp__stage" style={{ aspectRatio: `${box.w} / ${box.h}` }}>
-              <span className="wardrobe__garment-inner">
-                <GarmentVisual p={product} colorId={colorId} large />
-              </span>
-            </div>
-          }
+          visual={(() => {
+            const flat = (
+              <div className="pdp__stage" style={{ aspectRatio: `${box.w} / ${box.h}` }}>
+                <span className="wardrobe__garment-inner">
+                  <GarmentVisual p={product} colorId={colorId} large />
+                </span>
+              </div>
+            );
+            return supports3D(product) ? <GarmentStudio key={product.id} product={product} colorId={colorId} fallback={flat} /> : flat;
+          })()}
         />
       </div>
     </section>

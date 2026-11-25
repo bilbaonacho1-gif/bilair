@@ -2552,3 +2552,165 @@
 .notfound h1 {
   margin: 16px 0 24px;
 }
+
+/* ───────── Estudio 3D de prenda ───────── */
+.studio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+
+.studio__stage {
+  position: relative;
+  width: min(100%, 460px);
+}
+
+@media (max-width: 860px) {
+  .studio__stage {
+    width: min(78vw, 340px);
+  }
+}
+
+.studio__stage .pdp__stage {
+  width: 100%;
+  transition: opacity 0.6s var(--ease-out);
+}
+
+/* El lienzo es más grande que la ilustración: deja lugar al zoom y al giro */
+.studio__canvas {
+  position: absolute;
+  inset: -14% -22%;
+  width: 144%;
+  max-width: none;
+  height: 128%;
+  opacity: 0;
+  cursor: grab;
+  touch-action: pan-y;
+  transition: opacity 0.6s var(--ease-out);
+}
+
+.studio__canvas:active {
+  cursor: grabbing;
+}
+
+.studio--ready .studio__canvas {
+  opacity: 1;
+}
+
+.studio--ready .studio__fallback {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.studio__fallback {
+  transition: opacity 0.6s var(--ease-out) 0.15s;
+}
+
+.studio__loading {
+  position: absolute;
+  left: 50%;
+  bottom: -18px;
+  width: 64px;
+  height: 1px;
+  margin-left: -32px;
+  background: currentColor;
+  opacity: 0.4;
+  transform-origin: left;
+  animation: studio-load 1.2s var(--ease-io) infinite;
+}
+
+@keyframes studio-load {
+  0% {
+    transform: scaleX(0);
+  }
+  60% {
+    transform: scaleX(1);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+}
+
+.studio__controls {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.studio__controls button {
+  min-width: 44px;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+
+.studio__controls button[aria-pressed='true'] {
+  background: var(--white);
+  color: var(--carbon);
+  border-color: var(--white);
+}
+
+.studio__controls button:hover {
+  border-color: currentColor;
+}
+
+.studio__sep {
+  width: 10px;
+}
+
+.studio__src {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ───────── Grilla con filtros (dispersar y reagrupar) ───────── */
+.scatter__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 24px;
+}
+
+.scatter__filter {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+
+.scatter__filter:hover {
+  border-color: currentColor;
+}
+
+.scatter__filter[aria-pressed='true'] {
+  background: var(--carbon);
+  border-color: var(--carbon);
+  color: var(--white);
+}
+
+.scatter__grid {
+  position: relative;
+}
+
+.scatter__card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 50% 50%;
+  will-change: transform, opacity;
+}

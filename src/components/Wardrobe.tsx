@@ -5,6 +5,7 @@ import type { Category, Product } from '../data/types';
 import { Garment, garmentBox } from './Garment';
 import { ProductDetail } from './ProductDetail';
 import { Photo } from './Photo';
+import { GarmentStudio, supports3D } from './GarmentStudio';
 
 const spring = { type: 'spring', stiffness: 170, damping: 24, mass: 0.9 } as const;
 
@@ -146,25 +147,28 @@ export function Wardrobe() {
                 onNext={list.length > 1 ? () => step(1) : undefined}
                 onClose={close}
                 headingLevel="h3"
-                visual={
-                  <div className="pdp__stage" style={{ aspectRatio: `${garmentBox[current.garment].w} / ${garmentBox[current.garment].h}` }}>
-                    {current.id === opened ? (
-                      <motion.span layoutId={`g-${current.id}`} transition={spring} className="wardrobe__garment-inner">
-                        <GarmentVisual p={current} colorId={colorOf(current)} large />
-                      </motion.span>
-                    ) : (
-                      <motion.span
-                        key={current.id}
-                        className="wardrobe__garment-inner"
-                        initial={{ opacity: 0, x: dir * 48 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                      >
-                        <GarmentVisual p={current} colorId={colorOf(current)} large />
-                      </motion.span>
-                    )}
-                  </div>
-                }
+                visual={(() => {
+                  const flat = (
+                    <div className="pdp__stage" style={{ aspectRatio: `${garmentBox[current.garment].w} / ${garmentBox[current.garment].h}` }}>
+                      {current.id === opened ? (
+                        <motion.span layoutId={`g-${current.id}`} transition={spring} className="wardrobe__garment-inner">
+                          <GarmentVisual p={current} colorId={colorOf(current)} large />
+                        </motion.span>
+                      ) : (
+                        <motion.span
+                          key={current.id}
+                          className="wardrobe__garment-inner"
+                          initial={{ opacity: 0, x: dir * 48 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                        >
+                          <GarmentVisual p={current} colorId={colorOf(current)} large />
+                        </motion.span>
+                      )}
+                    </div>
+                  );
+                  return supports3D(current) ? <GarmentStudio key={current.id} product={current} colorId={colorOf(current)} fallback={flat} /> : flat;
+                })()}
               />
             </motion.div>
           )}

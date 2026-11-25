@@ -13,6 +13,8 @@ interface Props {
   className?: string;
   /** Muestra el logo estampado */
   print?: boolean;
+  /** Vista de espalda: sin cordones ni bolsillo */
+  back?: boolean;
   title?: string;
 }
 
@@ -42,7 +44,7 @@ function Print({ x, y, w, ink, globe = true }: { x: number; y: number; w: number
   );
 }
 
-export function Garment({ kind, color, ink, className = '', print = true, title }: Props) {
+export function Garment({ kind, color, ink, className = '', print = true, back = false, title }: Props) {
   const uid = useId().replace(/:/g, '');
   const shade = `shade-${uid}`;
   const box = garmentBox[kind];
@@ -108,10 +110,14 @@ export function Garment({ kind, color, ink, className = '', print = true, title 
             fill={`url(#${shade})`}
           />
           <path d="M66 26 C76 50 124 50 134 26" fill="none" stroke={fold} strokeWidth="3" />
-          <path d="M88 44 L86 92 M112 44 L114 92" stroke={ink} strokeOpacity="0.7" strokeWidth="1.6" />
-          <circle cx="86" cy="94" r="2" fill={ink} fillOpacity="0.7" />
-          <circle cx="114" cy="94" r="2" fill={ink} fillOpacity="0.7" />
-          <path d="M64 154 L136 154 L148 192 L52 192 Z" fill="none" stroke={fold} strokeWidth="1.6" />
+          {!back && (
+            <>
+              <path d="M88 44 L86 92 M112 44 L114 92" stroke={ink} strokeOpacity="0.7" strokeWidth="1.6" />
+              <circle cx="86" cy="94" r="2" fill={ink} fillOpacity="0.7" />
+              <circle cx="114" cy="94" r="2" fill={ink} fillOpacity="0.7" />
+              <path d="M64 154 L136 154 L148 192 L52 192 Z" fill="none" stroke={fold} strokeWidth="1.6" />
+            </>
+          )}
           <path d="M43 205 C80 211 120 211 157 205 M9 188 L31 192 M169 192 L191 188" stroke={fold} strokeWidth="6" fill="none" />
           {print && <Print x={100} y={120} w={110} ink={ink} globe={false} />}
         </g>

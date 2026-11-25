@@ -2,10 +2,9 @@ import { Link, useParams } from 'react-router-dom';
 import { getDrop } from '../data/drops';
 import { getDestination, statusLabel } from '../data/destinations';
 import { getProduct } from '../data/products';
-import { formatPrice } from '../config/site';
 import { Photo, formatCoords } from '../components/Photo';
-import { Garment } from '../components/Garment';
 import { Reveal } from '../components/Reveal';
+import { ScatterGrid } from '../components/ScatterGrid';
 import { NotFound } from './NotFound';
 
 export function DropPage() {
@@ -47,26 +46,7 @@ export function DropPage() {
                 Abrir en el ropero
               </Link>
             </div>
-            {items.length > 0 ? (
-              <ul className="product-grid">
-                {items.map((p, i) => (
-                  <Reveal as="li" key={p.id} delay={i * 70}>
-                    <Link to={`/producto/${p.id}`} className="product-card">
-                      <span className="product-card__visual">
-                        <Garment kind={p.garment} color={p.colors[0].hex} ink={p.colors[0].ink} title={p.name} />
-                        {p.demo && <span className="tag tag--demo product-card__demo">Muestra</span>}
-                      </span>
-                      <span className="product-card__name">{p.name}</span>
-                      <span className="mono">
-                        {formatPrice(p.price)} · {p.colors.length} {p.colors.length === 1 ? 'color' : 'colores'}
-                      </span>
-                    </Link>
-                  </Reveal>
-                ))}
-              </ul>
-            ) : (
-              <p className="lede">Todavía no hay prendas publicadas para este destino.</p>
-            )}
+            {items.length > 0 ? <ScatterGrid items={items} /> : <p className="lede">Todavía no hay prendas publicadas para este destino.</p>}
           </div>
         </div>
       </section>
