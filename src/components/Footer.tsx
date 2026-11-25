@@ -53,7 +53,19 @@ export function Footer() {
           <a href="http://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">
             CC BY 4.0
           </a>
-          , librea modificada para BILAIR.
+          , librea modificada para BILAIR. Prendas 3D: “Remera modelo 3d” de{' '}
+          <a
+            href="https://sketchfab.com/3d-models/remera-modelo-3d-creditos-a-quien-corresponda-4032c6e3868f4000867897cea1217cf2"
+            target="_blank"
+            rel="noreferrer"
+          >
+            isimo
+          </a>{' '}
+          y buzo con capucha de{' '}
+          <a href="https://sketchfab.com/3d-models/sweater-nike-sportswear-club-fleece-bc387203ef184f2dbd25b236945857c5" target="_blank" rel="noreferrer">
+            PKY_studio
+          </a>
+          , CC BY 4.0, recoloreadas, con estampado BILAIR y sin logos de terceros.
         </span>
       </div>
     </footer>

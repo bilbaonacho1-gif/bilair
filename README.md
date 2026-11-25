@@ -119,6 +119,15 @@ python3 scripts/repaint_livery.py original.glb repintado.glb node_modules/@fonts
 npx @gltf-transform/cli optimize repintado.glb public/models/bilair-a319.glb --compress meshopt --texture-compress webp --texture-size 1024
 ```
 
+## Prendas 3D
+
+`public/models/garments/` tiene dos modelos reales, ambos CC BY 4.0 (créditos en el footer):
+
+- `tee.glb`: “Remera modelo 3d” de isimo (Sketchfab). Se usa para las remeras.
+- `hoodie.glb`: buzo con capucha de PKY_studio (Sketchfab). Se usa para los hoodies. Se le borró el logo de la marca original de la textura con `scripts/clean_sweater.py` y se convirtió el material a metal/rugosidad.
+
+En la ficha se tiñen con el color del producto y el estampado BILAIR se proyecta como calco sobre el pecho (`src/components/GarmentStudio.tsx`, `MODELS`). Las prendas sin modelo (buzo cuello redondo) usan un volumen generado desde su ilustración.
+
 ## Accesibilidad y rendimiento
 
 - Respeta `prefers-reduced-motion`: sin intro, sin parallax ni marquesina.
