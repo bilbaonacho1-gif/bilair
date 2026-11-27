@@ -20,18 +20,18 @@ npm run build    # build de producción en dist/
 
 ## Secciones
 
-| Sección                   | Componente                                                                     | Estado                                                             |
-| ------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------ |
-| Intro cinematográfica     | `src/components/Intro.tsx`, `src/three/IntroScene.ts`, `src/three/timeline.ts` | Funcional (ver abajo)                                              |
-| Primera escena de la home | `src/components/HomeHero.tsx`, `src/styles/intro.css`                          | Funcional. La foto es un render del avión hasta tener campaña real |
-| Mapa de destinos          | `src/components/WorldMap.tsx`                                                  | Funcional (zoom, arrastre, selección, teclado por la lista)        |
-| Votación Next Stop        | `src/components/NextStop.tsx`, `src/services/votes.ts`, `api/votes.ts`         | **Demo** hasta conectar Upstash (ver abajo)                        |
-| Drops                     | `src/components/Drops.tsx`, `src/pages/DropPage.tsx`                           | Funcional, con datos provisionales                                 |
-| Ropero                    | `src/components/Wardrobe.tsx`, `src/components/ProductDetail.tsx`              | Funcional, con **catálogo de muestra**                             |
+| Sección                   | Componente                                                                     | Estado                                                                |
+| ------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| Intro cinematográfica     | `src/components/Intro.tsx`, `src/three/IntroScene.ts`, `src/three/timeline.ts` | Funcional (ver abajo)                                                 |
+| Primera escena de la home | `src/components/HomeHero.tsx`, `src/styles/intro.css`                          | Funcional. La foto es un render del avión hasta tener campaña real    |
+| Mapa de destinos          | `src/components/WorldMap.tsx`                                                  | Funcional (zoom, arrastre, selección, teclado por la lista)           |
+| Votación Next Stop        | `src/components/NextStop.tsx`, `src/services/votes.ts`, `api/votes.ts`         | **Demo** hasta conectar Upstash (ver abajo)                           |
+| Drops                     | `src/components/Drops.tsx`, `src/pages/DropPage.tsx`                           | Funcional, con datos provisionales                                    |
+| Ropero                    | `src/components/Wardrobe.tsx`, `src/components/ProductDetail.tsx`              | Funcional, con **catálogo de muestra**                                |
 | Virtual Fit               | `src/components/VirtualFit.tsx`, `src/services/tryon.ts`                       | Recomendador de talle con las medidas de la prenda. Es una estimación |
-| People                    | `src/components/People.tsx`, `src/services/outfits.ts`                         | **Demo**: looks de ejemplo; el formulario no envía nada todavía    |
-| Lookbook                  | `src/components/Lookbook.tsx`                                                  | Estructura lista, fotos pendientes                                 |
-| Carrito / checkout        | `src/services/cart.tsx`, `src/pages/CartPage.tsx`                              | Funcional; deriva la compra a la tienda oficial                    |
+| People                    | `src/components/People.tsx`, `src/services/outfits.ts`                         | **Demo**: looks de ejemplo; el formulario no envía nada todavía       |
+| Lookbook                  | `src/components/Lookbook.tsx`                                                  | Estructura lista, fotos pendientes                                    |
+| Carrito / checkout        | `src/services/cart.tsx`, `src/pages/CartPage.tsx`                              | Funcional; deriva la compra a la tienda oficial                       |
 
 ## Intro
 
@@ -128,16 +128,31 @@ npx @gltf-transform/cli optimize repintado.glb public/models/bilair-a319.glb --c
 
 En la ficha se tiñen con el color del producto y el estampado BILAIR se proyecta como calco sobre el pecho (`src/components/GarmentStudio.tsx`, `MODELS`). Las prendas sin modelo (buzo cuello redondo) usan un volumen generado desde su ilustración.
 
+## Ropero 3D
+
+El ropero (`src/components/Wardrobe.tsx`, escena en `src/three/ClosetScene.ts`) es una escena 3D en vivo:
+
+- Hay una percha por producto y color. Las prendas cuelgan de costado en el barral, como en un ropero real.
+- Se mueven: una brisa leve las balancea, pasarles el mouse las empuja y, al arrastrar, el barral se corre y se hamacan.
+  La tela no es rígida: el ruedo se atrasa respecto del balanceo y se tuerce cuando la prenda gira.
+- Al tocar una prenda gira sobre su gancho y se abre de frente; las vecinas le hacen lugar y aparece su cartel.
+  Tocarla de nuevo (o "Ver prenda") abre la ficha.
+- La pared, el estante y el piso son CSS; el barral, las perchas, las prendas y sus sombras son 3D.
+- Con teclado, cada percha es un botón (al enfocarla se abre). Sin WebGL se muestra una fila de imágenes.
+
+Cómo cuelga cada tipo de prenda (alto real, altura del cuello, tamaño de la percha) está en `src/data/garmentModels.ts`.
+Ahí también está la pose del buzo: el modelo original viene con los brazos abiertos y la capucha parada;
+`arms` le baja las mangas (en todo el sitio) y `hood` le baja la capucha solo en el ropero, para que el gancho salga por el cuello.
+
 ## Imágenes de prendas
 
-Mientras no haya fotos reales, las prendas se muestran con imágenes generadas desde sus modelos 3D, lisas
-(sin estampa), en cada color: sueltas (`tee-negro.webp`) y colgadas de una percha (`tee-negro-hang.webp`, para el ropero).
-Están en `public/media/garments` y las usa `src/components/GarmentImage.tsx`.
+Fuera del ropero, mientras no haya fotos reales, las prendas se muestran con imágenes generadas desde sus modelos 3D,
+lisas (sin estampa), en cada color. Están en `public/media/garments` y las usa `src/components/GarmentImage.tsx`.
 
 Para regenerarlas (otro color, otro modelo):
 
 1. `npm run dev`
-2. `node scripts/render_garments.cjs <carpeta temporal>` (colores en el mismo script; percha en `tools/render-garments.ts`)
+2. `node scripts/render_garments.cjs <carpeta temporal>` (los colores están en el mismo script)
 3. `python3 scripts/trim_garments.py <carpeta temporal> public/media/garments` y copiar los tamaños que imprime a `GarmentImage.tsx`
 
 El catálogo de muestra solo incluye las prendas que tienen modelo 3D (dos remeras y el hoodie).

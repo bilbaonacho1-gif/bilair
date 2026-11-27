@@ -3,6 +3,7 @@ import {
   Box3,
   Euler,
   Raycaster,
+  Vector2,
   Vector3,
   BufferAttribute,
   CanvasTexture,
@@ -46,6 +47,13 @@ export interface GarmentModel {
   printHeight: number;
   /** Ancho del estampado como fracción del ancho de la prenda */
   printWidth: number;
+  /**
+   * Mangas caídas: el modelo viene con los brazos abiertos y se le gira cada manga hacia abajo
+   * alrededor del hombro. `x`/`y` = hombro en unidades de la prenda (alto = 4, centro en 0).
+   */
+  arms?: { deg: number; x: number; y: number; soft: number };
+  /** Capucha caída hacia atrás (para colgarla de una percha). `y` = base del cuello en unidades de la prenda. */
+  hood?: { y: number; fold: number; len: number; front: number };
 }
 
 export type GarmentSource =
@@ -153,13 +161,15 @@ function clothMaterial(map: CanvasTexture, uniforms: Record<string, IUniform>) {
 /** Inyecta el shader de tela en un MeshStandardMaterial */
 function applyCloth<M extends MeshStandardMaterial>(m: M, uniforms: Record<string, IUniform>): M {
   m.onBeforeCompile = (shader) => {
-    Object.assign(shader.uniforms, uniforms);
+    Object.assign(shader.uniforms, { sway: { value: new Vector2() }, wind: { value: new Vector3() } }, uniforms);
     shader.vertexShader = shader.vertexShader
       .replace(
         '#include <common>',
         /* glsl */ `#include <common>
         uniform float customRotation;
         uniform float intro;
+        uniform vec2 sway;
+        uniform vec3 wind;
         const float size = ${SIZE.toFixed(1)};
         mat3 rotY(float a) { float c = cos(a), s = sin(a); return mat3(c, 0., -s, 0., 1., 0., s, 0., c); }
         mat3 rotX(float a) { float c = cos(a), s = sin(a); return mat3(1., 0., 0., 0., c, s, 0., -s, c); }
@@ -190,10 +200,49 @@ function applyCloth<M extends MeshStandardMaterial>(m: M, uniforms: Record<strin
           if (len > 1e-4) transformed.xz += radial / len * force * abs(customRotation) * .3;
           // 3) curva hacia adelante durante la entrada
           transformed = rotX(-intro * force * PI * .2) * transformed;
+          // 4) el ruedo se atrasa al balancearse y lo mueve el aire (wind = tiempo, amplitud, fase)
+          transformed.xz += sway * force;
+          transformed.z += sin(wind.x * 1.3 + position.x * 1.7 + wind.z) * wind.y * force;
+          transformed.x += sin(wind.x * .9 + position.y * 1.1 + wind.z * 1.7) * wind.y * .5 * force;
         }`,
       );
   };
   return m;
+}
+
+/** Deforma la geometría (ya centrada, alto = SIZE) según la pose del modelo */
+function poseGarment(geo: BufferGeometry, model: GarmentModel) {
+  const pos = geo.attributes.position as BufferAttribute;
+  const { arms, hood } = model;
+  for (let i = 0; i < pos.count; i++) {
+    let x = pos.getX(i);
+    let y = pos.getY(i);
+    let z = pos.getZ(i);
+    if (hood && y > hood.y) {
+      // La parte de atrás se pliega hacia la espalda; el frente del cuello apenas baja
+      const t = y - hood.y;
+      const back = MathUtils.smoothstep(-z, -0.15, 0.25);
+      const th = MathUtils.degToRad(hood.fold);
+      y = hood.y + t * MathUtils.lerp(hood.front, Math.cos(th) * hood.len, back);
+      z -= t * Math.sin(th) * hood.len * back;
+    }
+    if (arms) {
+      const side = Math.sign(x);
+      const w = MathUtils.smoothstep(Math.abs(x), arms.x - arms.soft * 0.3, arms.x + arms.soft);
+      if (w > 0) {
+        const a = -side * MathUtils.degToRad(arms.deg) * w;
+        const dx = x - side * arms.x;
+        const dy = y - arms.y;
+        x = side * arms.x + dx * Math.cos(a) - dy * Math.sin(a);
+        y = arms.y + dx * Math.sin(a) + dy * Math.cos(a);
+      }
+    }
+    pos.setXYZ(i, x, y, z);
+  }
+  pos.needsUpdate = true;
+  geo.computeVertexNormals();
+  geo.computeBoundingBox();
+  geo.computeBoundingSphere();
 }
 
 /** Copia la geometría con atributos en float: los modelos comprimidos vienen cuantizados */
@@ -289,6 +338,13 @@ export async function buildGarment(
     const m = new Mesh(geo, mat);
     group.add(m);
     if (!body || geo.attributes.position.count > body.geometry.attributes.position.count) body = m;
+  }
+
+  // Pose: mangas caídas y capucha baja. Después se vuelve a medir la prenda
+  if (model.arms || model.hood) {
+    for (const m of group.children as Mesh[]) poseGarment(m.geometry, model);
+    box = new Box3().setFromObject(group);
+    center.set(0, 0, 0);
   }
 
   // Estampado: calco proyectado sobre el pecho

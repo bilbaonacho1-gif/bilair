@@ -11,7 +11,7 @@ import { garmentRender } from './GarmentImage';
  * Es una estimación: la interfaz lo aclara al lado del resultado.
  */
 
-const compatible = products.filter((p) => p.measurements && garmentRender(p, undefined, false));
+const compatible = products.filter((p) => p.measurements && garmentRender(p, undefined));
 
 const builds: { id: Build; label: string }[] = [
   { id: 'recta', label: 'Recta' },
@@ -39,7 +39,7 @@ const fitCopy: Record<FitLabel, string> = {
 /** Dónde caen las cotas sobre la imagen de cada prenda, en fracciones de la imagen */
 const GUIDES: Partial<Record<Product['garment'], { chestY: number; chestX: [number, number]; top: number; bottom: number; lengthX: number }>> = {
   tee: { chestY: 0.4, chestX: [0.215, 0.785], top: 0.03, bottom: 0.985, lengthX: 0.9 },
-  hoodie: { chestY: 0.52, chestX: [0.385, 0.615], top: 0.17, bottom: 0.975, lengthX: 0.69 },
+  hoodie: { chestY: 0.47, chestX: [0.265, 0.735], top: 0.17, bottom: 0.845, lengthX: 0.69 },
 };
 
 /** Posición en la barra de calce: de 0 cm (justo) a 40 cm de holgura */
@@ -88,7 +88,7 @@ export function VirtualFit() {
   if (!product || !color || !rows.length || !recommended) return <p className="mono">Todavía no hay prendas con tabla de medidas cargada.</p>;
 
   const current = rows.find((r) => r.size === picked) ?? recommended;
-  const image = garmentRender(product, color.id, false)!;
+  const image = garmentRender(product, color.id)!;
   const guide = GUIDES[product.garment];
   const chests = rows.map((r) => r.m.chest);
   const minChest = Math.min(...chests);

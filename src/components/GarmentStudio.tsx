@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import markerFontUrl from '@fontsource/permanent-marker/files/permanent-marker-latin-400-normal.woff2?url';
 import type { Product } from '../data/types';
-import type { GarmentArtwork, GarmentModel, GarmentSource, GarmentStudioScene } from '../three/GarmentStudioScene';
+import type { GarmentArtwork, GarmentSource, GarmentStudioScene } from '../three/GarmentStudioScene';
+import { MODELS } from '../data/garmentModels';
 import { Garment, garmentBox } from './Garment';
 import { usePrefersReducedMotion } from '../hooks/useReveal';
 
@@ -14,15 +15,6 @@ import { usePrefersReducedMotion } from '../hooks/useReveal';
 export const supports3D = (p: Product) => !p.images.length && ['tee', 'crew', 'hoodie'].includes(p.garment);
 
 const ART_HEIGHT = 1024;
-
-/**
- * Modelos 3D reales por tipo de prenda (CC BY 4.0, créditos en el footer).
- * Las prendas sin modelo usan el volumen inflado desde su ilustración.
- */
-export const MODELS: Partial<Record<Product['garment'], GarmentModel>> = {
-  tee: { url: '/models/garments/tee.glb', yaw: 0, printHeight: 0.7, printWidth: 0.42 },
-  hoodie: { url: '/models/garments/hoodie.glb', yaw: 0, printHeight: 0.63, printWidth: 0.3 },
-};
 
 let fontCss: Promise<string> | null = null;
 
