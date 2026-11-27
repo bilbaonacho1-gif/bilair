@@ -44,7 +44,7 @@ function Print({ x, y, w, ink, globe = true }: { x: number; y: number; w: number
   );
 }
 
-export function Garment({ kind, color, ink, className = '', print = true, back = false, title }: Props) {
+export function Garment({ kind, color, ink, className = '', print = false, back = false, title }: Props) {
   const uid = useId().replace(/:/g, '');
   const shade = `shade-${uid}`;
   const box = garmentBox[kind];

@@ -65,7 +65,7 @@ export function Footer() {
           <a href="https://sketchfab.com/3d-models/sweater-nike-sportswear-club-fleece-bc387203ef184f2dbd25b236945857c5" target="_blank" rel="noreferrer">
             PKY_studio
           </a>
-          , CC BY 4.0, recoloreadas, con estampado BILAIR y sin logos de terceros.
+          , CC BY 4.0, recoloreadas y sin logos de terceros.
         </span>
       </div>
     </footer>

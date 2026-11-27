@@ -24,43 +24,6 @@ export const MODELS: Partial<Record<Product['garment'], GarmentModel>> = {
   hoodie: { url: '/models/garments/hoodie.glb', yaw: 0, printHeight: 0.63, printWidth: 0.3 },
 };
 
-/** Estampado BILAIR sobre fondo transparente, para el calco del modelo */
-export async function printCanvas(ink: string, globe: boolean) {
-  try {
-    await document.fonts.load("200px 'Permanent Marker'");
-  } catch {
-    /* usa la tipografía de respaldo */
-  }
-  const c = document.createElement('canvas');
-  c.width = 1024;
-  c.height = globe ? 760 : 420;
-  const ctx = c.getContext('2d')!;
-  ctx.fillStyle = ink;
-  ctx.strokeStyle = ink;
-  ctx.translate(512, 210);
-  ctx.rotate((-6 * Math.PI) / 180);
-  ctx.font = "250px 'Permanent Marker', cursive";
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('BILAIR', 0, 0);
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  if (globe) {
-    ctx.lineWidth = 9;
-    ctx.translate(512, 560);
-    const r = 150;
-    ctx.beginPath();
-    ctx.arc(0, 0, r, 0, Math.PI * 2);
-    ctx.ellipse(0, 0, r * 0.45, r, 0, 0, Math.PI * 2);
-    ctx.moveTo(-r, 0);
-    ctx.lineTo(r, 0);
-    ctx.moveTo(-r * 0.86, -r * 0.45);
-    ctx.lineTo(r * 0.86, -r * 0.45);
-    ctx.moveTo(-r * 0.86, r * 0.45);
-    ctx.lineTo(r * 0.86, r * 0.45);
-    ctx.stroke();
-  }
-  return c;
-}
 let fontCss: Promise<string> | null = null;
 
 /** La tipografía del estampado, embebida para que el SVG la use al rasterizarse */
@@ -119,9 +82,7 @@ export function GarmentStudio({ product, colorId, fallback }: { product: Product
 
   const model = MODELS[product.garment];
   const source = async (): Promise<GarmentSource> =>
-    model
-      ? { type: 'model', model, color: color.hex, print: await printCanvas(color.ink, product.garment === 'tee') }
-      : { type: 'inflated', artwork: await artwork(), aspect };
+    model ? { type: 'model', model, color: color.hex } : { type: 'inflated', artwork: await artwork(), aspect };
 
   const artwork = async (): Promise<GarmentArtwork> => {
     const f = frontRef.current!.querySelector('svg')!;
@@ -224,7 +185,7 @@ export function GarmentStudio({ product, colorId, fallback }: { product: Product
     const scene = sceneRef.current;
     if (!scene || state !== 'ready') return;
     let cancelled = false;
-    if (model) printCanvas(color.ink, product.garment === 'tee').then((print) => !cancelled && scene.setColor(color.hex, print));
+    if (model) scene.setColor(color.hex);
     else artwork().then((art) => !cancelled && scene.setArtwork(art));
     return () => {
       cancelled = true;

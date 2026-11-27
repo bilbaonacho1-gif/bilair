@@ -50,7 +50,7 @@ export interface GarmentModel {
 
 export type GarmentSource =
   | { type: 'inflated'; artwork: GarmentArtwork; aspect: number }
-  | { type: 'model'; model: GarmentModel; color: string; print: HTMLCanvasElement };
+  | { type: 'model'; model: GarmentModel; color: string; print?: HTMLCanvasElement };
 
 export interface GarmentStudioOptions {
   canvas: HTMLCanvasElement;
@@ -242,7 +242,7 @@ export async function buildGarment(
   gltf: { scene: Object3D },
   model: GarmentModel,
   color: string,
-  print: HTMLCanvasElement,
+  print: HTMLCanvasElement | undefined,
   uniforms: Record<string, IUniform>,
   maxAnisotropy: number,
 ): Promise<BuiltGarment> {
@@ -293,7 +293,7 @@ export async function buildGarment(
 
   // Estampado: calco proyectado sobre el pecho
   let decal: Mesh | null = null;
-  if (body) {
+  if (body && print) {
     group.updateMatrixWorld(true);
     const width = box.max.x - box.min.x;
     const y = box.min.y - center.y + SIZE * model.printHeight;
@@ -411,9 +411,9 @@ export class GarmentStudioScene {
   }
 
   /** Modelo real: nuevo color de tela y estampado con su tinta */
-  setColor(color: string, print: HTMLCanvasElement) {
+  setColor(color: string, print?: HTMLCanvasElement) {
     for (const m of this.cloth) m.color.set(color);
-    if (this.decal) {
+    if (this.decal && print) {
       const m = this.decal.material as MeshStandardMaterial;
       m.map?.dispose();
       m.map = texture(print, this.renderer.capabilities.getMaxAnisotropy());

@@ -128,24 +128,6 @@ npx @gltf-transform/cli optimize repintado.glb public/models/bilair-a319.glb --c
 
 En la ficha se tiñen con el color del producto y el estampado BILAIR se proyecta como calco sobre el pecho (`src/components/GarmentStudio.tsx`, `MODELS`). Las prendas sin modelo (buzo cuello redondo) usan un volumen generado desde su ilustración.
 
-## Hoodie Code (comercial en tiempo real)
-
-Sección entre Drops y El ropero (`src/components/HoodieCode.tsx`, escena en `src/three/HoodieCodeScene.ts`).
-Es un comercial de 10 s hecho con el modelo 3D real del buzo, sobre fondo blanco:
-
-1. El buzo negro flota; el visitante lo saca de cuadro con un swipe (o se va solo a los 2,6 s).
-2. Entra el Hoodie Pista verde bosque con un rebote de resorte.
-3. Contrapicado con "OVERSIZED", giro con rampa de velocidad con "STREET", paneo rápido a tres cuartos con "ICONIC".
-4. Tres paneles frente / lado / espalda.
-5. Primerísimos planos del logo y la capucha.
-6. Plano final con "PISTA CODE" gigante detrás, acercamiento lento y cuadro fijo; botones para ver el producto o repetir.
-
-- Producto y colores: constantes `PRODUCT_ID`, `FROM` y `TO` al principio del componente.
-- Tiempos: `src/three/hoodieCodeTimeline.ts`.
-- Solo avanza mientras está en pantalla. Con movimiento reducido muestra directamente el cuadro final.
-- Para revisar un instante: `/?hc-frame=5.2#hoodie-code` congela el comercial en ese segundo.
-- Del prompt original quedó afuera el maniquí que se viste con el buzo: no hay un modelo de maniquí con licencia libre en el proyecto.
-
 ## Accesibilidad y rendimiento
 
 - Respeta `prefers-reduced-motion`: sin intro, sin parallax ni marquesina.

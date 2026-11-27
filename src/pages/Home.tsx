@@ -4,7 +4,6 @@ import { HomeHero } from '../components/HomeHero';
 import { WorldMap } from '../components/WorldMap';
 import { NextStop, type NextStopHandle } from '../components/NextStop';
 import { Drops } from '../components/Drops';
-import { HoodieCode } from '../components/HoodieCode';
 import { Wardrobe } from '../components/Wardrobe';
 import { VirtualFit } from '../components/VirtualFit';
 import { People } from '../components/People';
@@ -78,8 +77,6 @@ export function Home() {
           <Drops />
         </div>
       </section>
-
-      <HoodieCode />
 
       <section id="ropero" className="section section--studio" aria-labelledby="ropero-title">
         <div className="wrap">
