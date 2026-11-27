@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import type { Category, Product } from '../data/types';
 import { categories } from '../data/products';
 import { formatPrice } from '../config/site';
-import { Garment } from './Garment';
+import { GarmentImage } from './GarmentImage';
 
 /**
  * Grilla de prendas con filtros "dispersar y reagrupar":
@@ -199,7 +199,7 @@ export function ScatterGrid({ items }: { items: Product[] }) {
           <div key={p.id} ref={(el) => (cardRefs.current[i] = el)} className="scatter__card">
             <Link to={`/producto/${p.id}`} className="product-card">
               <span className="product-card__visual">
-                <Garment kind={p.garment} color={p.colors[0].hex} ink={p.colors[0].ink} title={p.name} />
+                <GarmentImage p={p} />
                 {p.demo && <span className="tag tag--demo product-card__demo">Muestra</span>}
               </span>
               <span className="product-card__name">{p.name}</span>

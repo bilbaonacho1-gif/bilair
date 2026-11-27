@@ -2,26 +2,16 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, LayoutGroup, motion } from 'framer-motion';
 import { availableCategories, products } from '../data/products';
 import type { Category, Product } from '../data/types';
-import { Garment, garmentBox } from './Garment';
+import { garmentBox } from './Garment';
+import { GarmentImage, garmentRender } from './GarmentImage';
 import { ProductDetail } from './ProductDetail';
-import { Photo } from './Photo';
 import { GarmentStudio, supports3D } from './GarmentStudio';
 
 const spring = { type: 'spring', stiffness: 170, damping: 24, mass: 0.9 } as const;
 
-function Hanger() {
-  return (
-    <svg className="hanger" viewBox="0 0 120 40" aria-hidden="true">
-      <path d="M60 2 C66 2 68 8 63 11 L60 13 L60 17" fill="none" stroke="#2a2826" strokeWidth="2.2" strokeLinecap="round" />
-      <path d="M60 17 L8 36 L112 36 Z" fill="none" stroke="#2a2826" strokeWidth="3" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-export function GarmentVisual({ p, colorId, large = false }: { p: Product; colorId: string; large?: boolean }) {
-  const c = p.colors.find((x) => x.id === colorId) ?? p.colors[0];
-  if (p.images.length) return <Photo media={p.images[0]} className="garment-photo" tone="paper" />;
-  return <Garment kind={p.garment} color={c.hex} ink={c.ink} title={`${p.name}, ${c.name}`} className={large ? 'garment--large' : ''} />;
+/** Prenda en la ficha y en el riel: en el riel va colgada de su percha */
+export function GarmentVisual({ p, colorId, hang = false }: { p: Product; colorId: string; large?: boolean; hang?: boolean }) {
+  return <GarmentImage p={p} colorId={colorId} hang={hang} />;
 }
 
 export function Wardrobe() {
@@ -102,16 +92,16 @@ export function Wardrobe() {
           <div className="wardrobe__rail" aria-hidden="true" />
           <ul className="wardrobe__items" role="list" ref={railRef}>
             {list.map((p, i) => {
-              const box = garmentBox[p.garment];
+              const hung = garmentRender(p, colorOf(p), true);
+              const box = hung ? { w: hung.width, h: hung.height } : garmentBox[p.garment];
               const isSel = p.id === opened;
               return (
-                <li key={p.id} className="wardrobe__item" style={{ ['--i' as string]: i }}>
+                <li key={p.id} className={`wardrobe__item wardrobe__item--${p.garment}`} style={{ ['--i' as string]: i }}>
                   <button className="wardrobe__hang" onClick={() => open(p.id)} aria-label={`Ver ${p.name}`} aria-haspopup="dialog">
-                    <Hanger />
                     <span className="wardrobe__garment" style={{ aspectRatio: `${box.w} / ${box.h}` }}>
                       {!isSel && (
                         <motion.span layoutId={`g-${p.id}`} transition={spring} className="wardrobe__garment-inner">
-                          <GarmentVisual p={p} colorId={colorOf(p)} />
+                          <GarmentVisual p={p} colorId={colorOf(p)} hang />
                         </motion.span>
                       )}
                     </span>

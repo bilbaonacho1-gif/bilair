@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { demoOutfits } from '../data/drops';
 import { getProduct, products } from '../data/products';
 import type { Outfit } from '../data/types';
-import { Garment } from './Garment';
+import { GarmentImage } from './GarmentImage';
 import { Reveal } from './Reveal';
 import { submitOutfit, type SubmitResult } from '../services/outfits';
 
@@ -28,7 +28,7 @@ function FlatLay({ outfit }: { outfit: Outfit }) {
         const c = p.colors.find((x) => x.id === colorId) ?? p.colors[0];
         return (
           <div key={productId} className={`flatlay__item flatlay__item--${p.garment}`} style={{ ['--r' as string]: `${(i % 2 ? 1 : -1) * (3 + i * 2)}deg` }}>
-            <Garment kind={p.garment} color={c.hex} ink={c.ink} title={`${p.name} ${c.name}`} />
+            <GarmentImage p={p} colorId={c.id} />
           </div>
         );
       })}

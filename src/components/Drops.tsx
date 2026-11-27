@@ -4,7 +4,7 @@ import { getDestination } from '../data/destinations';
 import { getProduct } from '../data/products';
 import { Photo, formatCoords } from './Photo';
 import { Reveal } from './Reveal';
-import { Garment } from './Garment';
+import { GarmentImage } from './GarmentImage';
 
 export function Drops() {
   return (
@@ -37,7 +37,7 @@ export function Drops() {
                     <li key={p!.id}>
                       <Link to={`/producto/${p!.id}`} className="drop__item">
                         <span className="drop__thumb">
-                          <Garment kind={p!.garment} color={p!.colors[0].hex} ink={p!.colors[0].ink} title={p!.name} />
+                          <GarmentImage p={p!} />
                         </span>
                         <span className="mono">{p!.name}</span>
                       </Link>

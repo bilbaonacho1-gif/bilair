@@ -20,18 +20,18 @@ npm run build    # build de producción en dist/
 
 ## Secciones
 
-| Sección | Componente | Estado |
-| --- | --- | --- |
-| Intro cinematográfica | `src/components/Intro.tsx`, `src/three/IntroScene.ts`, `src/three/timeline.ts` | Funcional (ver abajo) |
-| Primera escena de la home | `src/components/HomeHero.tsx`, `src/styles/intro.css` | Funcional. La foto es un render del avión hasta tener campaña real |
-| Mapa de destinos | `src/components/WorldMap.tsx` | Funcional (zoom, arrastre, selección, teclado por la lista) |
-| Votación Next Stop | `src/components/NextStop.tsx`, `src/services/votes.ts`, `api/votes.ts` | **Demo** hasta conectar Upstash (ver abajo) |
-| Drops | `src/components/Drops.tsx`, `src/pages/DropPage.tsx` | Funcional, con datos provisionales |
-| Ropero | `src/components/Wardrobe.tsx`, `src/components/ProductDetail.tsx` | Funcional, con **catálogo de muestra** |
-| Virtual Fit | `src/components/VirtualFit.tsx`, `src/services/tryon.ts` | Vista ilustrativa por capas. No es simulación física ni IA |
-| People | `src/components/People.tsx`, `src/services/outfits.ts` | **Demo**: looks de ejemplo; el formulario no envía nada todavía |
-| Lookbook | `src/components/Lookbook.tsx` | Estructura lista, fotos pendientes |
-| Carrito / checkout | `src/services/cart.tsx`, `src/pages/CartPage.tsx` | Funcional; deriva la compra a la tienda oficial |
+| Sección                   | Componente                                                                     | Estado                                                             |
+| ------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------ |
+| Intro cinematográfica     | `src/components/Intro.tsx`, `src/three/IntroScene.ts`, `src/three/timeline.ts` | Funcional (ver abajo)                                              |
+| Primera escena de la home | `src/components/HomeHero.tsx`, `src/styles/intro.css`                          | Funcional. La foto es un render del avión hasta tener campaña real |
+| Mapa de destinos          | `src/components/WorldMap.tsx`                                                  | Funcional (zoom, arrastre, selección, teclado por la lista)        |
+| Votación Next Stop        | `src/components/NextStop.tsx`, `src/services/votes.ts`, `api/votes.ts`         | **Demo** hasta conectar Upstash (ver abajo)                        |
+| Drops                     | `src/components/Drops.tsx`, `src/pages/DropPage.tsx`                           | Funcional, con datos provisionales                                 |
+| Ropero                    | `src/components/Wardrobe.tsx`, `src/components/ProductDetail.tsx`              | Funcional, con **catálogo de muestra**                             |
+| Virtual Fit               | `src/components/VirtualFit.tsx`, `src/services/tryon.ts`                       | Vista ilustrativa por capas. No es simulación física ni IA         |
+| People                    | `src/components/People.tsx`, `src/services/outfits.ts`                         | **Demo**: looks de ejemplo; el formulario no envía nada todavía    |
+| Lookbook                  | `src/components/Lookbook.tsx`                                                  | Estructura lista, fotos pendientes                                 |
+| Carrito / checkout        | `src/services/cart.tsx`, `src/pages/CartPage.tsx`                              | Funcional; deriva la compra a la tienda oficial                    |
 
 ## Intro
 
@@ -127,6 +127,21 @@ npx @gltf-transform/cli optimize repintado.glb public/models/bilair-a319.glb --c
 - `hoodie.glb`: buzo con capucha de PKY_studio (Sketchfab). Se usa para los hoodies. Se le borró el logo de la marca original de la textura con `scripts/clean_sweater.py` y se convirtió el material a metal/rugosidad.
 
 En la ficha se tiñen con el color del producto y el estampado BILAIR se proyecta como calco sobre el pecho (`src/components/GarmentStudio.tsx`, `MODELS`). Las prendas sin modelo (buzo cuello redondo) usan un volumen generado desde su ilustración.
+
+## Imágenes de prendas
+
+Mientras no haya fotos reales, las prendas se muestran con imágenes generadas desde sus modelos 3D, lisas
+(sin estampa), en cada color: sueltas (`tee-negro.webp`) y colgadas de una percha (`tee-negro-hang.webp`, para el ropero).
+Están en `public/media/garments` y las usa `src/components/GarmentImage.tsx`.
+
+Para regenerarlas (otro color, otro modelo):
+
+1. `npm run dev`
+2. `node scripts/render_garments.cjs <carpeta temporal>` (colores en el mismo script; percha en `tools/render-garments.ts`)
+3. `python3 scripts/trim_garments.py <carpeta temporal> public/media/garments` y copiar los tamaños que imprime a `GarmentImage.tsx`
+
+El catálogo de muestra solo incluye las prendas que tienen modelo 3D (dos remeras y el hoodie).
+Si un producto tiene fotos en `images`, se usa la foto en lugar de la imagen generada.
 
 ## Accesibilidad y rendimiento
 

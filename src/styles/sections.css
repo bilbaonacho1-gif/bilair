@@ -968,12 +968,14 @@
   background: var(--paper-2);
 }
 
-.drop__thumb svg {
+.drop__thumb svg,
+.drop__thumb .garment-img {
   max-height: 100%;
   transition: transform 0.5s var(--ease-out);
 }
 
-.drop__item:hover svg {
+.drop__item:hover svg,
+.drop__item:hover .garment-img {
   transform: translateY(-3px) rotate(-2deg);
 }
 
@@ -1091,7 +1093,7 @@
 }
 
 .wardrobe__item {
-  flex: 0 0 clamp(140px, 15vw, 210px);
+  flex: 0 0 clamp(170px, 19vw, 270px);
   scroll-snap-align: center;
 }
 
@@ -1146,17 +1148,18 @@
   }
 }
 
-.hanger {
-  width: 52%;
-  margin-top: -14px;
-  position: relative;
-  z-index: 1;
+/* El buzo, con las mangas abiertas, ocupa casi el doble de ancho que una remera a la misma escala */
+.wardrobe__item--hoodie {
+  flex-basis: clamp(320px, 36vw, 510px);
 }
 
 .wardrobe__garment {
+  position: relative;
+  z-index: 1;
   display: block;
   width: 88%;
-  margin-top: -6px;
+  /* El gancho de la percha se cuelga del riel */
+  margin-top: -9px;
   filter: drop-shadow(0 18px 18px rgba(0, 0, 0, 0.35));
 }
 
@@ -1166,7 +1169,8 @@
   height: 100%;
 }
 
-.wardrobe__garment-inner svg {
+.wardrobe__garment-inner svg,
+.wardrobe__garment-inner .garment-img {
   width: 100%;
   height: 100%;
 }
@@ -1821,6 +1825,36 @@
   width: 30% !important;
 }
 
+.flatlay--1 .flatlay__item {
+  width: auto;
+  height: 80%;
+}
+
+.flatlay--1 .flatlay__item .garment-img {
+  width: auto;
+}
+
+.flatlay--1 .flatlay__item--hoodie {
+  width: 88%;
+  height: auto;
+}
+
+.flatlay--1 .flatlay__item--hoodie .garment-img {
+  width: 100%;
+  height: auto;
+}
+
+.flatlay--2 .flatlay__item--hoodie {
+  width: 78%;
+  left: 4%;
+  top: 12%;
+}
+
+.flatlay--2 .flatlay__item--hoodie + .flatlay__item {
+  top: auto;
+  bottom: 8%;
+}
+
 @media (max-width: 860px) {
   .people__grid {
     grid-template-columns: repeat(2, 1fr);
@@ -2200,13 +2234,15 @@
   padding: 14%;
 }
 
-.product-card__visual svg {
+.product-card__visual svg,
+.product-card__visual .garment-img {
   max-height: 100%;
   transition: transform 0.6s var(--ease-out);
   filter: drop-shadow(0 14px 14px rgba(0, 0, 0, 0.18));
 }
 
-.product-card:hover svg {
+.product-card:hover svg,
+.product-card:hover .garment-img {
   transform: translateY(-6px);
 }
 
@@ -2322,7 +2358,8 @@
   padding: 8px;
 }
 
-.cart-line__thumb svg {
+.cart-line__thumb svg,
+.cart-line__thumb .garment-img {
   max-height: 100%;
 }
 
@@ -2713,4 +2750,13 @@
   top: 0;
   transform-origin: 50% 50%;
   will-change: transform, opacity;
+}
+
+/* Imagen de prenda generada desde su modelo 3D */
+.garment-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
 }

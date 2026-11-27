@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useCart } from '../services/cart';
 import { getProduct } from '../data/products';
 import { formatPrice } from '../config/site';
-import { Garment } from './Garment';
+import { GarmentImage } from './GarmentImage';
 
 export function CartLines({ compact = false }: { compact?: boolean }) {
   const cart = useCart();
@@ -25,7 +25,7 @@ export function CartLines({ compact = false }: { compact?: boolean }) {
         return (
           <li key={`${l.productId}-${l.colorId}-${l.size}`} className="cart-line">
             <div className="cart-line__thumb" style={{ background: 'var(--paper)' }}>
-              <Garment kind={p.garment} color={color.hex} ink={color.ink} title={p.name} />
+              <GarmentImage p={p} colorId={color.id} />
             </div>
             <div className="cart-line__info">
               <p className="cart-line__name">{p.name}</p>
