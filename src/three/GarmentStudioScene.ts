@@ -18,6 +18,7 @@ import {
   SRGBColorSpace,
   WebGLRenderer,
   type BufferGeometry,
+  type Object3D,
   type IUniform,
 } from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
@@ -57,7 +58,7 @@ export interface GarmentStudioOptions {
   reducedMotion: boolean;
 }
 
-const SIZE = 4; // alto de la prenda en unidades de escena, igual que en el shader de referencia
+export const SIZE = 4; // alto de la prenda en unidades de escena, igual que en el shader de referencia
 const ZOOM_MIN = -0.6;
 const ZOOM_MAX = 2.4;
 const PIXEL_RATIO_CAP = 1.5;
@@ -208,11 +209,121 @@ function dequantize(src: BufferGeometry): BufferGeometry {
   return geo;
 }
 
-function texture(canvas: HTMLCanvasElement, maxAnisotropy: number) {
+export function texture(canvas: HTMLCanvasElement, maxAnisotropy: number) {
   const t = new CanvasTexture(canvas);
   t.colorSpace = SRGBColorSpace;
   t.anisotropy = Math.min(8, maxAnisotropy);
   return t;
+}
+
+/** Descarga el glTF de una prenda (con compresión meshopt) */
+export async function loadGarmentGltf(url: string) {
+  const [{ GLTFLoader }, { MeshoptDecoder }] = await Promise.all([
+    import('three/examples/jsm/loaders/GLTFLoader.js'),
+    import('three/examples/jsm/libs/meshopt_decoder.module.js'),
+  ]);
+  const loader = new GLTFLoader();
+  loader.setMeshoptDecoder(MeshoptDecoder);
+  return loader.loadAsync(url);
+}
+
+export interface BuiltGarment {
+  /** Prenda centrada, de alto SIZE (con la escala de encuadre ya aplicada al grupo) */
+  group: Group;
+  cloth: MeshStandardMaterial[];
+  decal: Mesh | null;
+}
+
+/**
+ * Arma una prenda a partir del glTF: geometría propia (se puede llamar varias veces con el mismo glTF),
+ * tela teñida, shader de tela y estampado BILAIR como calco sobre el pecho.
+ */
+export async function buildGarment(
+  gltf: { scene: Object3D },
+  model: GarmentModel,
+  color: string,
+  print: HTMLCanvasElement,
+  uniforms: Record<string, IUniform>,
+  maxAnisotropy: number,
+): Promise<BuiltGarment> {
+  const { DecalGeometry } = await import('three/examples/jsm/geometries/DecalGeometry.js');
+  const root = gltf.scene;
+  root.rotation.set(0, model.yaw, 0);
+  root.scale.setScalar(1);
+  root.position.set(0, 0, 0);
+  root.updateMatrixWorld(true);
+
+  // Normaliza: alto = SIZE y centro en el origen, para que el shader de tela use la misma escala
+  let box = new Box3().setFromObject(root);
+  const size = box.getSize(new Vector3());
+  root.scale.multiplyScalar(SIZE / size.y);
+  root.updateMatrixWorld(true);
+  box = new Box3().setFromObject(root);
+  const center = box.getCenter(new Vector3());
+
+  // Hornea las transformaciones en la geometría: el shader deforma en el espacio de la prenda
+  const group = new Group();
+  const cloth: MeshStandardMaterial[] = [];
+  const meshes: Mesh[] = [];
+  root.traverse((o) => (o as Mesh).isMesh && meshes.push(o as Mesh));
+  let body: Mesh | null = null;
+  for (const mesh of meshes) {
+    const geo = dequantize(mesh.geometry);
+    geo.applyMatrix4(mesh.matrixWorld);
+    geo.translate(-center.x, -center.y, -center.z);
+    const orig = mesh.material as MeshStandardMaterial;
+    const isFabric = geo.attributes.position.count > 1000;
+    const mat = applyCloth(
+      new MeshStandardMaterial({
+        map: orig.map ?? null,
+        normalMap: orig.normalMap ?? null,
+        aoMap: orig.aoMap ?? null,
+        color: isFabric ? color : '#e9e6e0',
+        roughness: isFabric ? 0.83 : 0.6,
+        metalness: 0,
+        side: DoubleSide,
+      }),
+      uniforms,
+    );
+    if (isFabric) cloth.push(mat);
+    const m = new Mesh(geo, mat);
+    group.add(m);
+    if (!body || geo.attributes.position.count > body.geometry.attributes.position.count) body = m;
+  }
+
+  // Estampado: calco proyectado sobre el pecho
+  let decal: Mesh | null = null;
+  if (body) {
+    group.updateMatrixWorld(true);
+    const width = box.max.x - box.min.x;
+    const y = box.min.y - center.y + SIZE * model.printHeight;
+    const ray = new Raycaster(new Vector3(0, y, 50), new Vector3(0, 0, -1));
+    const hit = ray.intersectObject(body, false)[0];
+    if (hit) {
+      const w = width * model.printWidth;
+      const h = (w * print.height) / print.width;
+      const geo = new DecalGeometry(body, hit.point, new Euler(0, 0, 0), new Vector3(w, h, 2));
+      const mat = applyCloth(
+        new MeshStandardMaterial({
+          map: texture(print, maxAnisotropy),
+          transparent: true,
+          depthWrite: false,
+          polygonOffset: true,
+          polygonOffsetFactor: -4,
+          roughness: 0.83,
+          metalness: 0,
+        }),
+        uniforms,
+      );
+      decal = new Mesh(geo, mat);
+      group.add(decal);
+    }
+  }
+
+  // Al final, después del calco (que se calcula a escala 1). Prendas anchas (mangas abiertas): se achican en pantalla sin cambiar la escala del shader
+  const fit = Math.max(1, (box.max.x - box.min.x) / (SIZE * 0.95));
+  group.scale.setScalar(1 / fit);
+  return { group, cloth, decal };
 }
 
 export class GarmentStudioScene {
@@ -275,85 +386,12 @@ export class GarmentStudioScene {
   async load() {
     const src = this.opts.source;
     if (src.type !== 'model') return;
-    const [{ GLTFLoader }, { MeshoptDecoder }, { DecalGeometry }] = await Promise.all([
-      import('three/examples/jsm/loaders/GLTFLoader.js'),
-      import('three/examples/jsm/libs/meshopt_decoder.module.js'),
-      import('three/examples/jsm/geometries/DecalGeometry.js'),
-    ]);
-    const loader = new GLTFLoader();
-    loader.setMeshoptDecoder(MeshoptDecoder);
-    const gltf = await loader.loadAsync(src.model.url);
-    const root = gltf.scene;
-    root.rotation.y = src.model.yaw;
-
-    // Normaliza: alto = SIZE y centro en el origen, para que el shader de tela use la misma escala
-    let box = new Box3().setFromObject(root);
-    const size = box.getSize(new Vector3());
-    root.scale.multiplyScalar(SIZE / size.y);
-    root.updateMatrixWorld(true);
-    box = new Box3().setFromObject(root);
-    const center = box.getCenter(new Vector3());
-
-    // Hornea las transformaciones en la geometría: el shader deforma en el espacio de la prenda
-    const meshes: Mesh[] = [];
-    root.traverse((o) => (o as Mesh).isMesh && meshes.push(o as Mesh));
-    let body: Mesh | null = null;
-    for (const mesh of meshes) {
-      const geo = dequantize(mesh.geometry);
-      geo.applyMatrix4(mesh.matrixWorld);
-      geo.translate(-center.x, -center.y, -center.z);
-      const orig = mesh.material as MeshStandardMaterial;
-      const isFabric = geo.attributes.position.count > 1000;
-      const mat = applyCloth(
-        new MeshStandardMaterial({
-          map: orig.map ?? null,
-          normalMap: orig.normalMap ?? null,
-          aoMap: orig.aoMap ?? null,
-          color: isFabric ? src.color : '#e9e6e0',
-          roughness: isFabric ? 0.83 : 0.6,
-          metalness: 0,
-          side: DoubleSide,
-        }),
-        this.uniforms,
-      );
-      if (isFabric) this.cloth.push(mat);
-      const m = new Mesh(geo, mat);
-      this.garment.add(m);
-      if (!body || geo.attributes.position.count > body.geometry.attributes.position.count) body = m;
-    }
-
-    // Estampado: calco proyectado sobre el pecho
-    if (body) {
-      this.garment.updateMatrixWorld(true);
-      const width = box.max.x - box.min.x;
-      const y = box.min.y - center.y + SIZE * src.model.printHeight;
-      const ray = new Raycaster(new Vector3(0, y, 50), new Vector3(0, 0, -1));
-      const hit = ray.intersectObject(body, false)[0];
-      if (hit) {
-        const w = width * src.model.printWidth;
-        const h = (w * src.print.height) / src.print.width;
-        const geo = new DecalGeometry(body, hit.point, new Euler(0, 0, 0), new Vector3(w, h, 2));
-        const mat = applyCloth(
-          new MeshStandardMaterial({
-            map: texture(src.print, this.renderer.capabilities.getMaxAnisotropy()),
-            transparent: true,
-            depthWrite: false,
-            polygonOffset: true,
-            polygonOffsetFactor: -4,
-            roughness: 0.83,
-            metalness: 0,
-          }),
-          this.uniforms,
-        );
-        this.decal = new Mesh(geo, mat);
-        this.garment.add(this.decal);
-      }
-    }
-
-    // Al final, después del calco (que se calcula a escala 1). Prendas anchas (mangas abiertas): se achican en pantalla sin cambiar la escala del shader
-    const fit = Math.max(1, (box.max.x - box.min.x) / (SIZE * 0.95));
-    this.garment.scale.setScalar(1 / fit);
-
+    const gltf = await loadGarmentGltf(src.model.url);
+    const built = await buildGarment(gltf, src.model, src.color, src.print, this.uniforms, this.renderer.capabilities.getMaxAnisotropy());
+    this.cloth = built.cloth;
+    this.decal = built.decal;
+    for (const child of [...built.group.children]) this.garment.add(child);
+    this.garment.scale.copy(built.group.scale);
     this.renderOnce();
   }
 

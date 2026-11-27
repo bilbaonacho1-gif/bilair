@@ -19,13 +19,13 @@ const ART_HEIGHT = 1024;
  * Modelos 3D reales por tipo de prenda (CC BY 4.0, créditos en el footer).
  * Las prendas sin modelo usan el volumen inflado desde su ilustración.
  */
-const MODELS: Partial<Record<Product['garment'], GarmentModel>> = {
+export const MODELS: Partial<Record<Product['garment'], GarmentModel>> = {
   tee: { url: '/models/garments/tee.glb', yaw: 0, printHeight: 0.7, printWidth: 0.42 },
   hoodie: { url: '/models/garments/hoodie.glb', yaw: 0, printHeight: 0.63, printWidth: 0.3 },
 };
 
 /** Estampado BILAIR sobre fondo transparente, para el calco del modelo */
-async function printCanvas(ink: string, globe: boolean) {
+export async function printCanvas(ink: string, globe: boolean) {
   try {
     await document.fonts.load("200px 'Permanent Marker'");
   } catch {
