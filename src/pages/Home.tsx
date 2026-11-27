@@ -95,8 +95,8 @@ export function Home() {
           <SectionHead
             index="05"
             label="Virtual Fit"
-            title={<span id="fit-title">Probate tu ropa</span>}
-            aside="Elegí prenda, silueta y talle para ver una referencia de cómo te queda. Es ilustrativo, no una medición exacta."
+            title={<span id="fit-title">Encontrá tu talle</span>}
+            aside="Contanos tu altura, tu peso y cómo te gusta que te quede: te recomendamos un talle y te mostramos las medidas de la prenda."
           />
           <VirtualFit />
         </div>

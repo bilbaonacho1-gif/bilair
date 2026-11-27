@@ -4,6 +4,7 @@
  * Se usa con `npm run dev` y scripts/render_garments.cjs.
  *
  * Parámetros: ?model=tee|hoodie&color=%23hex&hang=1&yaw=0&pitch=0&w=1200&h=1400
+ * Con hang=1 hay dos pasadas: pass=garment (prenda y percha) y pass=shadow (solo la sombra sobre la pared).
  */
 import {
   ACESFilmicToneMapping,
@@ -15,9 +16,12 @@ import {
   MathUtils,
   Mesh,
   MeshStandardMaterial,
+  PCFSoftShadowMap,
   PerspectiveCamera,
+  PlaneGeometry,
   PMREMGenerator,
   Scene,
+  ShadowMaterial,
   Shape,
   SRGBColorSpace,
   TubeGeometry,
@@ -75,6 +79,8 @@ function hanger(u: number, halfSpan: number, drop: number, stemCm: number) {
     [-0.9, 2.05],
   ].map(([x, y], i) => new Vector3(x * r, y * r + (i ? stemCm * u : 0), 0));
   const hook = new Mesh(new TubeGeometry(new CatmullRomCurve3(pts, false, 'centripetal'), 96, 0.5 * u, 16, false), steel);
+  // Gancho giratorio a 90°: la prenda mira al frente y el gancho abraza el barral, que corre de lado a lado
+  hook.rotation.y = Math.PI / 2;
   g.add(hook);
   // Arandela donde el gancho entra en la madera
   const collar = new Mesh(
@@ -105,8 +111,13 @@ async function main() {
   const pmrem = new PMREMGenerator(r);
   scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
   scene.environmentIntensity = num('env', 0.85);
-  const key = new DirectionalLight(0xffffff, num('key', 0.9));
-  key.position.set(-3, 5, 8);
+  const hang = q.get('hang') === '1';
+  const shadowPass = q.get('pass') === 'shadow';
+  // Colgada: un foco de techo marca los pliegues y proyecta la sombra en la pared
+  if (hang) scene.environmentIntensity = num('env', 0.5);
+  const key = new DirectionalLight(0xffffff, num('key', hang ? 1.7 : 0.9));
+  if (hang) key.position.set(-2.4, 4.2, 10);
+  else key.position.set(-3, 5, 8);
   scene.add(key);
 
   const gltf = await loadGarmentGltf(cfg.url);
@@ -119,7 +130,7 @@ async function main() {
   const box = new Box3().setFromObject(built.group);
   const size = box.getSize(new Vector3());
   let top = box.max.y;
-  if (q.get('hang') === '1') {
+  if (hang) {
     const u = size.y / cfg.cm;
     const h = hanger(u, (size.x * cfg.span) / 2, size.y * cfg.drop, num('stem', cfg.stem));
     h.group.position.set(0, box.min.y + size.y * num('neckY', cfg.neckY), size.z * num('z', cfg.z));
@@ -132,12 +143,40 @@ async function main() {
   // Encuadre: todo el conjunto (prenda + gancho) con un margen parejo
   const cam = new PerspectiveCamera(22, W / H, 0.1, 100);
   const cy = (top + box.min.y) / 2;
-  const hh = ((top - box.min.y) / 2) * 1.06;
-  const hw = (size.x / 2) * 1.06;
+  const hh = ((top - box.min.y) / 2) * (hang ? 1.32 : 1.06);
+  const hw = (size.x / 2) * (hang ? 1.3 : 1.06);
   const tan = Math.tan(MathUtils.degToRad(11));
   const d = Math.max(hh / tan, hw / (tan * (W / H))) / num('zoom', 1) + size.z / 2;
   cam.position.set(0, cy, d);
   cam.lookAt(0, cy, 0);
+  if (hang) {
+    r.shadowMap.enabled = true;
+    r.shadowMap.type = PCFSoftShadowMap;
+    key.castShadow = true;
+    key.shadow.mapSize.set(4096, 4096);
+    const ext = Math.max(size.x, top - box.min.y) * 0.85;
+    Object.assign(key.shadow.camera, { left: -ext, right: ext, top: ext, bottom: -ext, near: 0.1, far: 60 });
+    key.shadow.camera.updateProjectionMatrix();
+    key.shadow.bias = -0.0006;
+    key.shadow.normalBias = 0.03;
+    key.shadow.radius = 6;
+    const u = size.y / cfg.cm;
+    // Pared a 5 cm de la espalda de la prenda
+    const wall = new Mesh(new PlaneGeometry(60, 60), new ShadowMaterial({ opacity: 1 }));
+    wall.position.set(0, cy, box.min.z - 5 * u);
+    wall.receiveShadow = true;
+    wall.visible = shadowPass;
+    scene.add(wall);
+    rig.traverse((o) => {
+      const m = o as Mesh;
+      if (!m.isMesh) return;
+      m.castShadow = true;
+      m.receiveShadow = true;
+      // En la pasada de sombra la prenda proyecta pero no se dibuja
+      if (shadowPass) (m.material as MeshStandardMaterial).colorWrite = false;
+      if (shadowPass) (m.material as MeshStandardMaterial).depthWrite = false;
+    });
+  }
   r.render(scene, cam);
   (window as unknown as { __done: boolean }).__done = true;
 }

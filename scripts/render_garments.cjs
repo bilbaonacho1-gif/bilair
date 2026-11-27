@@ -21,9 +21,13 @@ const SIZES = { tee: 'w=1200&h=1400', hoodie: 'w=1700&h=1200' };
   if (extra.length) extra.forEach((qs, i) => jobs.push({ file: `test-${i}`, qs }));
   else
     for (const [model, colors] of Object.entries(COLORS))
-      for (const [id, hex] of Object.entries(colors))
-        for (const hang of [0, 1])
-          jobs.push({ file: `${model}-${id}${hang ? '-hang' : ''}`, qs: `model=${model}&color=${encodeURIComponent(hex)}&hang=${hang}&${SIZES[model]}` });
+      for (const [id, hex] of Object.entries(colors)) {
+        const qs = `model=${model}&color=${encodeURIComponent(hex)}&${SIZES[model]}`;
+        jobs.push({ file: `${model}-${id}`, qs: `${qs}&hang=0` });
+        jobs.push({ file: `${model}-${id}-hang`, qs: `${qs}&hang=1&pass=garment` });
+        // La sombra es igual para todos los colores: se dibuja una vez por modelo
+        if (!jobs.some((j) => j.file === `${model}-shadow`)) jobs.push({ file: `${model}-shadow`, qs: `${qs}&hang=1&pass=shadow` });
+      }
   for (const j of jobs) {
     await p.goto(`${base}?${j.qs}`, { timeout: 120000 });
     await p.waitForFunction(() => window.__done === true, null, { timeout: 120000 });

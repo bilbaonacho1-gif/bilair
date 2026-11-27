@@ -28,7 +28,7 @@ npm run build    # build de producción en dist/
 | Votación Next Stop        | `src/components/NextStop.tsx`, `src/services/votes.ts`, `api/votes.ts`         | **Demo** hasta conectar Upstash (ver abajo)                        |
 | Drops                     | `src/components/Drops.tsx`, `src/pages/DropPage.tsx`                           | Funcional, con datos provisionales                                 |
 | Ropero                    | `src/components/Wardrobe.tsx`, `src/components/ProductDetail.tsx`              | Funcional, con **catálogo de muestra**                             |
-| Virtual Fit               | `src/components/VirtualFit.tsx`, `src/services/tryon.ts`                       | Vista ilustrativa por capas. No es simulación física ni IA         |
+| Virtual Fit               | `src/components/VirtualFit.tsx`, `src/services/tryon.ts`                       | Recomendador de talle con las medidas de la prenda. Es una estimación |
 | People                    | `src/components/People.tsx`, `src/services/outfits.ts`                         | **Demo**: looks de ejemplo; el formulario no envía nada todavía    |
 | Lookbook                  | `src/components/Lookbook.tsx`                                                  | Estructura lista, fotos pendientes                                 |
 | Carrito / checkout        | `src/services/cart.tsx`, `src/pages/CartPage.tsx`                              | Funcional; deriva la compra a la tienda oficial                    |

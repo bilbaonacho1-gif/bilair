@@ -10,8 +10,8 @@ import { Photo } from './Photo';
 
 /** Tamaño de las imágenes generadas, por tipo de prenda */
 const RENDERS: Partial<Record<Product['garment'], { colors: string[]; plain: [number, number]; hang: [number, number] }>> = {
-  tee: { colors: ['off-white', 'negro', 'piedra'], plain: [859, 900], hang: [763, 900] },
-  hoodie: { colors: ['verde', 'negro', 'piedra'], plain: [900, 473], hang: [900, 570] },
+  tee: { colors: ['off-white', 'negro', 'piedra'], plain: [859, 900], hang: [919, 1000] },
+  hoodie: { colors: ['verde', 'negro', 'piedra'], plain: [900, 473], hang: [1000, 585] },
 };
 
 export function garmentRender(p: Product, colorId: string | undefined, hang: boolean) {

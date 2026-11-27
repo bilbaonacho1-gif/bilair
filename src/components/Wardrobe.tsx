@@ -89,6 +89,7 @@ export function Wardrobe() {
         </div>
 
         <div className="wardrobe__closet">
+          <div className="wardrobe__shelf" aria-hidden="true" />
           <div className="wardrobe__rail" aria-hidden="true" />
           <ul className="wardrobe__items" role="list" ref={railRef}>
             {list.map((p, i) => {
